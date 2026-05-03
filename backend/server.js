@@ -1,6 +1,6 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
@@ -9,12 +9,27 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 5000 
-})
-.then(() => console.log("✅ MongoDB Connected!"))
-.catch(err => console.error("❌ Connection Error:", err.message));
+// Routes
+const productRoutes = require('./routes/productRoutes');
+app.use('/api/products', productRoutes);
+
+// MongoDB Connection with Extra Options
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 10000, // 10 seconds tak wait karega
+      family: 4 // IPv4 ko force karega (ECONNREFUSED ke liye aksar ye kaam kar jata hai)
+    });
+    console.log("✅ MongoDB Connected Successfully!");
+  } catch (err) {
+    console.error("❌ MongoDB Connection Error Details:");
+    console.error(err.message);
+    console.log("Tip: Check if your IP 0.0.0.0/0 is added in Atlas and your Password is correct.");
+  }
+};
+
+connectDB();
+
 // Root Route
 app.get('/', (req, res) => {
   res.send("Interior Store API is running...");
